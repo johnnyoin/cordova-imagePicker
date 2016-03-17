@@ -49,6 +49,9 @@
 		<header-file src="src/ios/ELCImagePicker/ELCImagePickerController.h" />
 		<source-file src="src/ios/ELCImagePicker/ELCImagePickerController.m" />
 
+		<header-file src="src/ios/ELCLocalizedString.h" />
+		<source-file src="src/ios/ELCLocalizedString.m" />
+
 		<resource-file src="src/ios/ELCImagePicker/Resources/ELCAlbumPickerController.xib" />
 		<resource-file src="src/ios/ELCImagePicker/Resources/ELCAssetPicker.xib" />
 		<resource-file src="src/ios/ELCImagePicker/Resources/ELCAssetTablePicker.xib" />

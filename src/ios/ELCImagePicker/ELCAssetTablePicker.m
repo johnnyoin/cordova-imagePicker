@@ -9,6 +9,7 @@
 #import "ELCAssetCell.h"
 #import "ELCAsset.h"
 #import "ELCAlbumPickerController.h"
+#import "ELCLocalizedString.h"
 
 @interface ELCAssetTablePicker ()
 
@@ -22,195 +23,194 @@
 
 - (id)init
 {
-    self = [super init];
-    if (self) {
-        //Sets a reasonable default bigger then 0 for columns
-        //So that we don't have a divide by 0 scenario
-        self.columns = 4;
-    }
-    return self;
+  self = [super init];
+  if (self) {
+    //Sets a reasonable default bigger then 0 for columns
+    //So that we don't have a divide by 0 scenario
+    self.columns = 4;
+  }
+  return self;
 }
 
 - (void)viewDidLoad
 {
-    [self.tableView setSeparatorStyle:UITableViewCellSeparatorStyleNone];
-	[self.tableView setAllowsSelection:NO];
+  [self.tableView setSeparatorStyle:UITableViewCellSeparatorStyleNone];
+  [self.tableView setAllowsSelection:NO];
 
-    NSMutableArray *tempArray = [[NSMutableArray alloc] init];
-    self.elcAssets = tempArray;
-	
-    if (self.immediateReturn) {
-        
-    } else {
-        UIBarButtonItem *doneButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneAction:)];
-        [self.navigationItem setRightBarButtonItem:doneButtonItem];
-        [self.navigationItem setTitle:@"Loading..."];
-    }
+  NSMutableArray *tempArray = [[NSMutableArray alloc] init];
+  self.elcAssets = tempArray;
 
-	[self performSelectorInBackground:@selector(preparePhotos) withObject:nil];
+  if (self.immediateReturn) {
+
+  } else {
+    UIBarButtonItem *doneButtonItem = [[UIBarButtonItem alloc] initWithTitle:[ELCLocalizedString get:@"Done"] style:UIBarButtonItemStyleDone target:self action:@selector(doneAction:)];
+    [self.navigationItem setRightBarButtonItem:doneButtonItem];
+    [self.navigationItem setTitle:[ELCLocalizedString get:@"Loading..."]];
+  }
+
+  [self performSelectorInBackground:@selector(preparePhotos) withObject:nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    [super viewWillAppear:animated];
-    self.columns = self.view.bounds.size.width / 80;
+  [super viewWillAppear:animated];
+  self.columns = self.view.bounds.size.width / 80;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
 {
-    return YES;
+  return YES;
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
-    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-    self.columns = self.view.bounds.size.width / 80;
-    [self.tableView reloadData];
+  [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+  self.columns = self.view.bounds.size.width / 80;
+  [self.tableView reloadData];
 }
 
 - (void)preparePhotos
 {
-    @autoreleasepool {
+  @autoreleasepool {
 
-        [self.assetGroup enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
-            
-            if (result == nil) {
-                return;
-            }
+    [self.assetGroup enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
 
-            ELCAsset *elcAsset = [[ELCAsset alloc] initWithAsset:result];
-            [elcAsset setParent:self];
-            
-            BOOL isAssetFiltered = NO;
-            if (self.assetPickerFilterDelegate &&
-               [self.assetPickerFilterDelegate respondsToSelector:@selector(assetTablePicker:isAssetFilteredOut:)])
-            {
-                isAssetFiltered = [self.assetPickerFilterDelegate assetTablePicker:self isAssetFilteredOut:(ELCAsset*)elcAsset];
-            }
+      if (result == nil) {
+        return;
+      }
 
-            if (!isAssetFiltered) {
-                [self.elcAssets addObject:elcAsset];
-            }
+      ELCAsset *elcAsset = [[ELCAsset alloc] initWithAsset:result];
+      [elcAsset setParent:self];
 
-         }];
+      BOOL isAssetFiltered = NO;
+      if (self.assetPickerFilterDelegate &&
+          [self.assetPickerFilterDelegate respondsToSelector:@selector(assetTablePicker:isAssetFilteredOut:)])
+      {
+        isAssetFiltered = [self.assetPickerFilterDelegate assetTablePicker:self isAssetFilteredOut:(ELCAsset*)elcAsset];
+      }
 
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            [self.tableView reloadData];
-            // scroll to bottom
-            long section = [self numberOfSectionsInTableView:self.tableView] - 1;
-            long row = [self tableView:self.tableView numberOfRowsInSection:section] - 1;
-            if (section >= 0 && row >= 0) {
-                NSIndexPath *ip = [NSIndexPath indexPathForRow:row
-                                                     inSection:section];
-                        [self.tableView scrollToRowAtIndexPath:ip
-                                              atScrollPosition:UITableViewScrollPositionBottom
-                                                      animated:NO];
-            }
-            
-            [self.navigationItem setTitle:self.singleSelection ? @"Pick Photo" : @"Pick Photos"];
-        });
-    }
+      if (!isAssetFiltered) {
+        [self.elcAssets addObject:elcAsset];
+      }
+
+    }];
+
+    dispatch_sync(dispatch_get_main_queue(), ^{
+      [self.tableView reloadData];
+      // scroll to bottom
+      long section = [self numberOfSectionsInTableView:self.tableView] - 1;
+      long row = [self tableView:self.tableView numberOfRowsInSection:section] - 1;
+      if (section >= 0 && row >= 0) {
+        NSIndexPath *ip = [NSIndexPath indexPathForRow:row
+                                             inSection:section];
+        [self.tableView scrollToRowAtIndexPath:ip
+                              atScrollPosition:UITableViewScrollPositionBottom
+                                      animated:NO];
+      }
+
+      [self.navigationItem setTitle:self.singleSelection ? [ELCLocalizedString get:@"Pick Photo"] : [ELCLocalizedString get:@"Pick Photos"]];
+    });
+  }
 }
 
 - (void)doneAction:(id)sender
-{	
-	NSMutableArray *selectedAssetsImages = [[NSMutableArray alloc] init];
-	    
-	for (ELCAsset *elcAsset in self.elcAssets) {
-		if ([elcAsset selected]) {
-			[selectedAssetsImages addObject:[elcAsset asset]];
-		}
-	}
-    [self.parent selectedAssets:selectedAssetsImages];
-}
+{
+  NSMutableArray *selectedAssetsImages = [[NSMutableArray alloc] init];
 
+  for (ELCAsset *elcAsset in self.elcAssets) {
+    if ([elcAsset selected]) {
+      [selectedAssetsImages addObject:[elcAsset asset]];
+    }
+  }
+  [self.parent selectedAssets:selectedAssetsImages];
+}
 
 - (BOOL)shouldSelectAsset:(ELCAsset *)asset
 {
-    NSUInteger selectionCount = 0;
-    for (ELCAsset *elcAsset in self.elcAssets) {
-        if (elcAsset.selected) selectionCount++;
-    }
-    BOOL shouldSelect = YES;
-    if ([self.parent respondsToSelector:@selector(shouldSelectAsset:previousCount:)]) {
-        shouldSelect = [self.parent shouldSelectAsset:asset previousCount:selectionCount];
-    }
-    return shouldSelect;
+  NSUInteger selectionCount = 0;
+  for (ELCAsset *elcAsset in self.elcAssets) {
+    if (elcAsset.selected) selectionCount++;
+  }
+  BOOL shouldSelect = YES;
+  if ([self.parent respondsToSelector:@selector(shouldSelectAsset:previousCount:)]) {
+    shouldSelect = [self.parent shouldSelectAsset:asset previousCount:selectionCount];
+  }
+  return shouldSelect;
 }
 
 - (void)assetSelected:(ELCAsset *)asset
 {
-    if (self.singleSelection) {
+  if (self.singleSelection) {
 
-        for (ELCAsset *elcAsset in self.elcAssets) {
-            if (asset != elcAsset) {
-                elcAsset.selected = NO;
-            }
-        }
+    for (ELCAsset *elcAsset in self.elcAssets) {
+      if (asset != elcAsset) {
+        elcAsset.selected = NO;
+      }
     }
-    if (self.immediateReturn) {
-        NSArray *singleAssetArray = @[asset.asset];
-        [(NSObject *)self.parent performSelector:@selector(selectedAssets:) withObject:singleAssetArray afterDelay:0];
-    }
+  }
+  if (self.immediateReturn) {
+    NSArray *singleAssetArray = @[asset.asset];
+    [(NSObject *)self.parent performSelector:@selector(selectedAssets:) withObject:singleAssetArray afterDelay:0];
+  }
 }
 
 #pragma mark UITableViewDataSource Delegate Methods
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    // Return the number of sections.
-    return 1;
+  // Return the number of sections.
+  return 1;
 }
 
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    if (self.columns <= 0) { //Sometimes called before we know how many columns we have
-        self.columns = 4;
-    }
-    NSInteger numRows = ceil([self.elcAssets count] / (float)self.columns);
-    return numRows;
+  if (self.columns <= 0) { //Sometimes called before we know how many columns we have
+    self.columns = 4;
+  }
+  NSInteger numRows = ceil([self.elcAssets count] / (float)self.columns);
+  return numRows;
 }
 
 - (NSArray *)assetsForIndexPath:(NSIndexPath *)path
 {
-    long index = path.row * self.columns;
-    long length = MIN(self.columns, [self.elcAssets count] - index);
-    return [self.elcAssets subarrayWithRange:NSMakeRange(index, length)];
+  long index = path.row * self.columns;
+  long length = MIN(self.columns, [self.elcAssets count] - index);
+  return [self.elcAssets subarrayWithRange:NSMakeRange(index, length)];
 }
 
 // Customize the appearance of table view cells.
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-{    
-    static NSString *CellIdentifier = @"Cell";
-        
-    ELCAssetCell *cell = (ELCAssetCell*)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+{
+  static NSString *CellIdentifier = @"Cell";
 
-    if (cell == nil) {		        
-        cell = [[ELCAssetCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
-    }
-    
-    [cell setAssets:[self assetsForIndexPath:indexPath]];
-    
-    return cell;
+  ELCAssetCell *cell = (ELCAssetCell*)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+
+  if (cell == nil) {
+    cell = [[ELCAssetCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+  }
+
+  [cell setAssets:[self assetsForIndexPath:indexPath]];
+
+  return cell;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	return 79;
+  return 79;
 }
 
 - (int)totalSelectedAssets
 {
-    int count = 0;
-    
-    for (ELCAsset *asset in self.elcAssets) {
-		if (asset.selected) {
-            count++;	
-		}
-	}
-    
-    return count;
+  int count = 0;
+
+  for (ELCAsset *asset in self.elcAssets) {
+    if (asset.selected) {
+      count++;
+    }
+  }
+
+  return count;
 }
 
 
