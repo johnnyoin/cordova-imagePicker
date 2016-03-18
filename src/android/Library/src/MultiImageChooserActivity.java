@@ -77,6 +77,8 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.Locale;
+
 public class MultiImageChooserActivity extends Activity implements OnItemClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = "ImagePicker";
@@ -118,8 +120,25 @@ public class MultiImageChooserActivity extends Activity implements OnItemClickLi
     
     private ProgressDialog progress;
 
+    private String selectedLang = "en";
+
+    private String strProcessing = "Processing Images";
+    private String strProcessingNote = "This may take a few moments";
+    private String strChooseMax = "Maximum";
+    private String strChooseMaxPhotos = "Photos";
+    private String strChooseNoteMax = "You can only select";
+    private String strChooseNoteMaxPhotos = "photos at a time.";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        selectedLang = Locale.getDefault().getLanguage();
+        if (selectedLang.equals("fr")) {
+            strProcessing = "Récupération des images";
+            strProcessingNote = "Veuillez patienter";
+            strChooseNoteMax = "Vous pouvez sélectionner seulement";
+            strChooseNoteMaxPhotos = "photos à la fois.";
+        }
+
         super.onCreate(savedInstanceState);
         fakeR = new FakeR(this);
         setContentView(fakeR.getId("layout", "multiselectorgrid"));
@@ -173,8 +192,8 @@ public class MultiImageChooserActivity extends Activity implements OnItemClickLi
         setupHeader();
         updateAcceptButton();
         progress = new ProgressDialog(this);
-        progress.setTitle("Processing Images");
-        progress.setMessage("This may take a few moments");
+        progress.setTitle(strProcessing);
+        progress.setMessage(strProcessingNote);
     }
     
     @Override
@@ -189,8 +208,8 @@ public class MultiImageChooserActivity extends Activity implements OnItemClickLi
         if (maxImages == 0 && isChecked) {
             isChecked = false;
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Maximum " + maxImageCount + " Photos");
-            builder.setMessage("You can only select " + maxImageCount + " photos at a time.");
+            builder.setTitle(strChooseMax + " " + maxImageCount + " " + strChooseMaxPhotos);
+            builder.setMessage(strChooseNoteMax + " " + maxImageCount + " " + strChooseNoteMaxPhotos);
             builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) { 
                     dialog.cancel();
