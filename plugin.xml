@@ -22,7 +22,7 @@
 
 	<!-- ios -->
 	<platform name="ios">
-		<preference name="PHOTO_LIBRARY_USAGE_DESCRIPTION" default=" " />
+		<preference name="PHOTO_LIBRARY_USAGE_DESCRIPTION" default="Votre autorisation est requise pour accéder aux photos de votre appareil." />
 
 		<config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription ">
               <string>$PHOTO_LIBRARY_USAGE_DESCRIPTION</string>
