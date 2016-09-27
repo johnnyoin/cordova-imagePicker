@@ -18,7 +18,7 @@
 @synthesize callbackId;
 
 - (void) getPictures:(CDVInvokedUrlCommand *)command {
-	NSDictionary *options = [command.arguments objectAtIndex: 0];
+    NSDictionary *options = [command.arguments objectAtIndex: 0];
     NSInteger maximumImagesCount = [[options objectForKey:@"maximumImagesCount"] integerValue];
     self.useOriginal = [[options objectForKey:@"useOriginal"] boolValue];
     self.createThumbnail = [[options objectForKey:@"createThumbnail"] boolValue];
@@ -69,14 +69,10 @@
         docsPath = [libPath stringByAppendingPathComponent:@"NoCloud"];
     }
     NSError* err = nil;
-    NSFileManager* fileMgr = [[NSFileManager alloc] init];
-    NSString* filePath;
-    NSString* thumbPath;
-    int fileName = 1;
-    NSString *fileExtension = @"jpg";
     ALAsset* asset = nil;
     UIImageOrientation orientation = UIImageOrientationUp;;
     CGSize targetSize = CGSizeMake(self.width, self.height);
+    NSMutableDictionary* photos = [NSMutableDictionary dictionaryWithDictionary:@{}];
     for (NSDictionary *dict in info) {
         asset = [dict objectForKey:@"ALAsset"];
         // From ELCImagePickerController.m
@@ -85,82 +81,27 @@
             ALAssetRepresentation *assetRep = [asset defaultRepresentation];
             CGImageRef imgRef = NULL;
             
-            if(self.useOriginal) {
-                
-                buffer = (Byte*)malloc(assetRep.size);
-                buffered = [assetRep getBytes:buffer fromOffset:0 length:assetRep.size error:nil];
-                data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];
-                
-                if ([assetRep.UTI isEqualToString:@"public.png"]) {
-                    fileExtension = @"png";
-                } else if([assetRep.UTI isEqualToString:@"public.jpg"]) {
-                    fileExtension = @"jpg";
-                }
-                
-            } else {
-                //defaultRepresentation returns image as it appears in photo picker, rotated and sized,
-                //so use UIImageOrientationUp when creating our image below.
-                if (picker.returnsOriginalImage) {
-                    imgRef = [assetRep fullResolutionImage];
-                    
-                    NSNumber *orientationValue = [asset valueForProperty:@"ALAssetPropertyOrientation"];
-                    if (orientationValue != nil) {
-                        orientation = [orientationValue intValue];
-                    }
-                } else {
-                    imgRef = [assetRep fullScreenImage];
-                }
-                
-                UIImage* image = [UIImage imageWithCGImage:imgRef scale:1.0f orientation:orientation];
-                if (self.width == 0 && self.height == 0) {
-                    data = UIImageJPEGRepresentation(image, self.quality/100.0f);
-                } else {
-                    UIImage* scaledImage = [self imageByScalingNotCroppingForSize:image toSize:targetSize];
-                    data = UIImageJPEGRepresentation(scaledImage, self.quality/100.0f);
-                }
-                
-                fileExtension = @"jpg";
-                
-            }
-            
-            do {
-                filePath = [NSString stringWithFormat:@"%@/%@%04d.%@", docsPath, CDV_PHOTO_PREFIX, fileName, fileExtension];
-                thumbPath = [NSString stringWithFormat:@"%@/thumb_%@%04d.%@", docsPath, CDV_PHOTO_PREFIX, fileName, fileExtension];
-                fileName++;
-            } while ([fileMgr fileExistsAtPath:filePath]);
-            
-            if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
-                break;
-            } else {
+            // modifs luckybird
+            NSURL *assetUrl = [assetRep url];
+            NSString *assetUrlString = [assetUrl absoluteString];
+            NSString *assetFilename = [assetRep filename];
 
-                if (self.createThumbnail) {
-                    
-                    imgRef = [asset thumbnail];
-                    NSNumber *orientationValue = [asset valueForProperty:@"ALAssetPropertyOrientation"];
-                    if (orientationValue != nil) {
-                        orientation = [orientationValue intValue];
-                    }
-                    if([fileExtension isEqualToString:@"jpg"]) {
-                        UIImage* image = [UIImage imageWithCGImage:imgRef scale:1.0f orientation:orientation];
-                        thumbData = UIImageJPEGRepresentation(image, 75.0f/100.0f);
-                    } else if([fileExtension isEqualToString:@"png"]) {
-                        UIImage* image = [UIImage imageWithCGImage:imgRef scale:1.0f orientation:orientation];
-                        thumbData = UIImagePNGRepresentation(image);
-                    }
-                    
-                    [thumbData writeToFile:thumbPath options:NSAtomicWrite error:&err];
-                    
-                }
-
-                [resultStrings addObject:[[NSURL fileURLWithPath:filePath] absoluteString]];
-            }
+            NSDictionary* photo;
+            photo = @{
+                @"localURL": assetUrlString,
+                @"filename": assetFilename
+            };
+            [photos setObject:photo forKey:photo[@"localURL"]];
+      
         }
         
     }
     
     if (nil == result) {
-        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:resultStrings];
+        //result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:resultStrings];
+        NSArray* photoMsg = [photos allValues];
+        NSLog(@"[picker] Sending to phonegap application message with %lu photos",(unsigned long)[photoMsg count]);
+        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:photoMsg];
     }
     
     [self.viewController dismissViewControllerAnimated:YES completion:nil];
@@ -168,11 +109,11 @@
 }
 
 - (void)elcImagePickerControllerDidCancel:(ELCImagePickerController *)picker {
-	[self.viewController dismissViewControllerAnimated:YES completion:nil];
-	CDVPluginResult* pluginResult = nil;
+    [self.viewController dismissViewControllerAnimated:YES completion:nil];
+    CDVPluginResult* pluginResult = nil;
     NSArray* emptyArray = [NSArray array];
-	pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:emptyArray];
-	[self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:emptyArray];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
 }
 
 - (UIImage*)imageByScalingNotCroppingForSize:(UIImage*)anImage toSize:(CGSize)frameSize

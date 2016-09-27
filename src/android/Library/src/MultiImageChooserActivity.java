@@ -568,53 +568,19 @@ public class MultiImageChooserActivity extends Activity implements OnItemClickLi
 
         @Override
         protected ArrayList<String> doInBackground(Set<Entry<String, Integer>>... fileSets) {
+            
+            // modif luckybird
+
             Set<Entry<String, Integer>> fileNames = fileSets[0];
             ArrayList<String> al = new ArrayList<String>();
-            try {
-                Iterator<Entry<String, Integer>> i = fileNames.iterator();
-                Bitmap bmp;
-                while(i.hasNext()) {
 
-                    Entry<String, Integer> imageInfo = i.next();
-                    File originalFile = new File(imageInfo.getKey());
-                    File savedFile = null;
-                    File thumbFile = null;
-
-                    if(useOriginal) {
-
-                        savedFile = this.storeOriginal(imageInfo.getKey(), originalFile.getName());
-
-                    } else {
-
-                        bmp = this.processBitmap(originalFile, imageInfo);
-                        savedFile = this.storeImage(bmp, originalFile.getName(), false);
-
-                    }
-                    if (createThumbnail) {
-
-                        bmp = this.getThumbnailBitmap(originalFile.getAbsolutePath());
-                        if (bmp != null) thumbFile = this.storeImage(bmp, savedFile.getName(), true);
-                    }
-
-                    al.add(Uri.fromFile(savedFile).toString());
-                }
-
-                return al;
-
-            } catch(IOException e) {
-                try {
-                    asyncTaskError = e;
-                    for (int i = 0; i < al.size(); i++) {
-                        URI uri = new URI(al.get(i));
-                        File file = new File(uri);
-                        file.delete();
-                    }
-                } catch(Exception exception) {
-                    // the finally does what we want to do
-                } finally {
-                    return new ArrayList<String>();
-                }
+            Iterator<Entry<String, Integer>> i = fileNames.iterator();
+            while(i.hasNext()) {
+                Entry<String, Integer> imageInfo = i.next();
+                al.add(imageInfo.getKey());
             }
+
+            return al;
         }
         
         @Override
