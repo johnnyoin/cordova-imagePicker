@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="multi_app_name">MultiImageChooser</string>
+    <string name="free_version_label">Images restantes: %d</string>
+    <string name="error_database">Erreur</string>
+    <string name="requesting_thumbnails">Récupération des miniatures</string>
+    <string name="discard">Annuler</string>
+    <string name="all">Toutes</string>
+    <string name="clear">Aucune</string>
+    <string name="done">Ok</string>
+    <string name="chosen">Choisies : </string>
+    <string name="processing">Récupération des photos</string>
+    <string name="processing_time">Veuillez patienter</string>
+    <string name="max_1">Maximum</string>
+    <string name="max_2">Photos</string>
+    <string name="max_3">Vous ne pouvez sélectionner que </string>
+    <string name="max_4">photos à la fois.</string>
+</resources>
